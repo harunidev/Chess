@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="tr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Modern 3D satranç oyunu - Yapay zekaya karşı oyna, açılışları öğren">
+    <title>Star Chess | Modern Satranç</title>
+    <link rel="stylesheet" href="styles.css">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@400;500;600;700&display=swap"
+        rel="stylesheet">
+</head>
+
+<body>
+    <div class="app-container">
+        <!-- Header -->
+        <header class="header">
+            <div class="logo" id="logo-home" style="cursor: pointer;">
+                <span class="logo-icon">♔</span>
+                <h1>Star Chess</h1>
+            </div>
+            <nav class="nav-menu">
+                <button class="nav-btn active" data-mode="play">
+                    <span class="btn-icon">⚔️</span>
+                    Oyna
+                </button>
+                <button class="nav-btn" data-mode="puzzle">
+                    <span class="btn-icon">🧩</span>
+                    Taktik
+                </button>
+                <button class="nav-btn" data-mode="tutorial">
+                    <span class="btn-icon">📚</span>
+                    Öğren
+                </button>
+            </nav>
+        </header>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Game Mode Selection (shown initially) -->
+            <div id="mode-selection" class="mode-selection">
+                <div class="mode-card" data-action="play">
+                    <div class="mode-icon">⚔️</div>
+                    <h2>Bilgisayara Karşı Oyna</h2>
+                    <p>Yapay zeka rakibine karşı mücadele et</p>
+                    <div class="difficulty-selector">
+                        <button class="diff-btn" data-difficulty="easy">Kolay</button>
+                        <button class="diff-btn active" data-difficulty="medium">Orta</button>
+                        <button class="diff-btn" data-difficulty="hard">Zor</button>
+                    </div>
+                    <button class="play-btn">Oyuna Başla</button>
+                </div>
+
+                <div class="mode-card" data-action="tutorial">
+                    <div class="mode-icon">📚</div>
+                    <h2>Açılışları Öğren</h2>
+                    <p>Temel satranç açılışlarını keşfet</p>
+                    <div class="opening-list">
+                        <button class="opening-btn" data-opening="italian">
+                            <span class="opening-name">İtalyan Açılışı</span>
+                            <span class="opening-moves">1.e4 e5 2.Nf3 Nc6 3.Bc4</span>
+                        </button>
+                        <button class="opening-btn" data-opening="sicilian">
+                            <span class="opening-name">Sicilya Savunması</span>
+                            <span class="opening-moves">1.e4 c5</span>
+                        </button>
+                        <button class="opening-btn" data-opening="queens-gambit">
+                            <span class="opening-name">Vezir Gambiti</span>
+                            <span class="opening-moves">1.d4 d5 2.c4</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Game Area (hidden initially) -->
+            <div id="game-area" class="game-area hidden">
+                <!-- Left Panel - Game Info -->
+                <aside class="game-panel left-panel">
+                    <div class="player-info opponent">
+                        <div class="player-avatar">♚</div>
+                        <div class="player-details">
+                            <span class="player-name">Bilgisayar</span>
+                            <span class="player-level" id="ai-level">Orta</span>
+                        </div>
+                        <div class="captured-pieces" id="white-captured"></div>
+                    </div>
+
+                    <div class="game-status" id="game-status">
+                        <span class="status-text">Beyaz oynar</span>
+                    </div>
+
+                    <div class="player-info player">
+                        <div class="player-avatar">♔</div>
+                        <div class="player-details">
+                            <span class="player-name">Sen</span>
+                            <span class="player-color">Beyaz</span>
+                        </div>
+                        <div class="captured-pieces" id="black-captured"></div>
+                    </div>
+                </aside>
+
+                <!-- Chess Board -->
+                <div class="board-container">
+                    <div class="board-wrapper">
+                        <div class="board-coordinates ranks">
+                            <span>8</span><span>7</span><span>6</span><span>5</span>
+                            <span>4</span><span>3</span><span>2</span><span>1</span>
+                        </div>
+                        <div class="board-inner">
+                            <div id="chess-board" class="chess-board"></div>
+                        </div>
+                        <div class="board-coordinates files">
+                            <span>a</span><span>b</span><span>c</span><span>d</span>
+                            <span>e</span><span>f</span><span>g</span><span>h</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Panel - Move History & Controls -->
+                <aside class="game-panel right-panel">
+                    <div class="panel-section">
+                        <h3>Hamle Geçmişi</h3>
+                        <div class="move-history" id="move-history"></div>
+                    </div>
+
+                    <div class="panel-section controls">
+                        <button class="control-btn" id="btn-new-game">
+                            <span>🔄</span> Yeni Oyun
+                        </button>
+                        <button class="control-btn" id="btn-undo">
+                            <span>↩️</span> Geri Al
+                        </button>
+                        <button class="control-btn" id="btn-home">
+                            <span>🏠</span> Ana Menü
+                        </button>
+                    </div>
+                </aside>
+            </div>
+
+            <!-- Tutorial Area (hidden initially) -->
+            <div id="tutorial-area" class="tutorial-area hidden">
+                <aside class="tutorial-panel">
+                    <div class="tutorial-header">
+                        <h2 id="tutorial-title">📚 İtalyan Açılışı</h2>
+                        <p id="tutorial-description">Başlangıç seviyesi için ideal açılış</p>
+                    </div>
+
+                    <!-- Current Move Display -->
+                    <div class="tutorial-current-move">
+                        <div class="move-notation" id="current-notation">1. e4</div>
+                        <div class="move-badge">
+                            <span id="move-color-badge">Beyaz oynar</span>
+                        </div>
+                    </div>
+
+                    <!-- Step Explanation - Single step at a time -->
+                    <div class="tutorial-explanation" id="tutorial-explanation">
+                        <p>Hamle açıklaması burada görünecek...</p>
+                    </div>
+
+                    <!-- Progress Bar -->
+                    <div class="tutorial-progress">
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="tutorial-progress-fill"></div>
+                        </div>
+                        <span class="step-counter" id="step-counter">1/6</span>
+                    </div>
+
+                    <!-- Navigation Controls -->
+                    <div class="tutorial-controls">
+                        <button class="tutorial-nav-btn prev-btn" id="btn-prev-step">
+                            <span>◀</span> Önceki
+                        </button>
+                        <button class="tutorial-nav-btn next-btn" id="btn-next-step">
+                            Sonraki <span>▶</span>
+                        </button>
+                    </div>
+
+                    <button class="control-btn tutorial-home" id="btn-tutorial-home">
+                        <span>🏠</span> Ana Menü
+                    </button>
+                </aside>
+
+                <div class="board-container tutorial-board">
+                    <div class="board-wrapper">
+                        <div class="board-coordinates ranks">
+                            <span>8</span><span>7</span><span>6</span><span>5</span>
+                            <span>4</span><span>3</span><span>2</span><span>1</span>
+                        </div>
+                        <div class="board-inner">
+                            <div id="tutorial-board" class="chess-board"></div>
+                        </div>
+                        <div class="board-coordinates files">
+                            <span>a</span><span>b</span><span>c</span><span>d</span>
+                            <span>e</span><span>f</span><span>g</span><span>h</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Puzzle Area (hidden initially) -->
+            <div id="puzzle-area" class="puzzle-area hidden">
+                <aside class="puzzle-panel">
+                    <div class="puzzle-header">
+                        <h2>🧩 Taktik Antrenmanı</h2>
+                        <p>Doğru hamleyi bul ve satranç becerilerini geliştir</p>
+                    </div>
+
+                    <div class="puzzle-info-card">
+                        <div class="info-row">
+                            <span class="info-label">Puzzle ID:</span>
+                            <span id="puzzle-id" class="info-value">-</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">Rating:</span>
+                            <span id="puzzle-rating" class="info-value">-</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">Temalar:</span>
+                            <span id="puzzle-themes" class="info-value">-</span>
+                        </div>
+                    </div>
+
+                    <div id="puzzle-feedback" class="puzzle-feedback"></div>
+
+                    <div class="puzzle-controls">
+                        <button class="puzzle-btn hint-btn" onclick="puzzleMode.showHint()">
+                            <span>💡</span> İpucu
+                        </button>
+                        <button class="puzzle-btn skip-btn" onclick="puzzleMode.skip()">
+                            <span>⏭️</span> Atla
+                        </button>
+                        <button class="puzzle-btn solution-btn" onclick="puzzleMode.showSolution()">
+                            <span>📖</span> Çözüm
+                        </button>
+                    </div>
+
+                    <div class="puzzle-stats">
+                        <h3>İstatistikler</h3>
+                        <div id="puzzle-stats-content">
+                            <div class="stat-item">
+                                <span class="stat-label">Toplam:</span>
+                                <span id="stat-total" class="stat-value">0</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-label">Çözülen:</span>
+                                <span id="stat-solved" class="stat-value">0</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-label">Başarı Oranı:</span>
+                                <span id="stat-rate" class="stat-value">0%</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button class="control-btn puzzle-home" id="btn-puzzle-home">
+                        <span>🏠</span> Ana Menü
+                    </button>
+                </aside>
+
+                <div class="board-container puzzle-board-container">
+                    <div class="board-wrapper">
+                        <div class="board-coordinates ranks">
+                            <span>8</span><span>7</span><span>6</span><span>5</span>
+                            <span>4</span><span>3</span><span>2</span><span>1</span>
+                        </div>
+                        <div class="board-inner">
+                            <div id="puzzle-board" class="chess-board"></div>
+                        </div>
+                        <div class="board-coordinates files">
+                            <span>a</span><span>b</span><span>c</span><span>d</span>
+                            <span>e</span><span>f</span><span>g</span><span>h</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- Color Selection Modal -->
+        <div id="color-modal" class="modal hidden">
+            <div class="modal-content color-content">
+                <h2>🎨 Renk Seç</h2>
+                <p>Hangi renk ile oynamak istiyorsun?</p>
+                <div class="color-buttons">
+                    <button class="color-btn white-btn" data-color="white">
+                        <span class="color-piece">♔</span>
+                        <span>Beyaz</span>
+                    </button>
+                    <button class="color-btn black-btn" data-color="black">
+                        <span class="color-piece">♚</span>
+                        <span>Siyah</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Promotion Modal -->
+        <div id="promotion-modal" class="modal hidden">
+            <div class="modal-content promotion-content">
+                <h3>Taşı Seç</h3>
+                <div class="promotion-pieces">
+                    <button class="promotion-piece" data-piece="q">♕</button>
+                    <button class="promotion-piece" data-piece="r">♖</button>
+                    <button class="promotion-piece" data-piece="b">♗</button>
+                    <button class="promotion-piece" data-piece="n">♘</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Game Over Modal -->
+        <div id="gameover-modal" class="modal hidden">
+            <div class="modal-content gameover-content">
+                <div class="gameover-icon" id="gameover-icon">🏆</div>
+                <h2 id="gameover-title">Oyun Bitti!</h2>
+                <p id="gameover-message">Tebrikler, kazandınız!</p>
+                <div class="gameover-buttons">
+                    <button class="control-btn" id="btn-rematch">
+                        <span>🔄</span> Tekrar Oyna
+                    </button>
+                    <button class="control-btn" id="btn-gameover-home">
+                        <span>🏠</span> Ana Menü
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="storage.js"></script>
+    <script src="lichess-api.js"></script>
+    <script src="chess-engine.js"></script>
+    <script src="ai-engine.js"></script>
+    <script src="puzzle-mode.js"></script>
+    <script src="tutorial.js"></script>
+    <script src="game.js"></script>
+</body>
+
+</html>

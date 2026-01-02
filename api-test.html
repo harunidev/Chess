@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="tr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Test - Lichess Client</title>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #0a0e27 0%, #1a1f3a 100%);
+            color: #fff;
+            padding: 40px;
+            margin: 0;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .test-section {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 24px;
+        }
+
+        .test-section h2 {
+            margin-top: 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding-bottom: 12px;
+        }
+
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            color: white;
+            cursor: pointer;
+            font-size: 14px;
+            margin-right: 12px;
+            margin-bottom: 12px;
+        }
+
+        button:hover {
+            opacity: 0.9;
+        }
+
+        .result {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 8px;
+            padding: 16px;
+            margin-top: 16px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            overflow-x: auto;
+            white-space: pre-wrap;
+        }
+
+        .success {
+            color: #10b981;
+        }
+
+        .error {
+            color: #ef4444;
+        }
+
+        .info {
+            color: #60a5fa;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>🧪 Lichess API Test Suite</h1>
+
+        <div class="test-section">
+            <h2>1. Opening Explorer - Master Games</h2>
+            <button onclick="testMasterGames()">Test Master Games (e4 position)</button>
+            <button onclick="testItalianOpening()">Test Italian Opening Position</button>
+            <div id="master-result" class="result"></div>
+        </div>
+
+        <div class="test-section">
+            <h2>2. Opening Explorer - Lichess Games</h2>
+            <button onclick="testLichessGames()">Test Lichess Games (e4 position)</button>
+            <div id="lichess-result" class="result"></div>
+        </div>
+
+        <div class="test-section">
+            <h2>3. Daily Puzzle</h2>
+            <button onclick="testDailyPuzzle()">Get Daily Puzzle</button>
+            <div id="puzzle-result" class="result"></div>
+        </div>
+
+        <div class="test-section">
+            <h2>4. Game Export</h2>
+            <button onclick="testGameExport()">Get Sample Game</button>
+            <div id="game-result" class="result"></div>
+        </div>
+
+        <div class="test-section">
+            <h2>5. Cache Management</h2>
+            <button onclick="testCache()">Test Cache</button>
+            <button onclick="showCacheInfo()">Show Cache Info</button>
+            <button onclick="clearCache()">Clear Cache</button>
+            <div id="cache-result" class="result"></div>
+        </div>
+
+        <div class="test-section">
+            <h2>6. Statistics</h2>
+            <button onclick="testStats()">Test Puzzle Stats</button>
+            <button onclick="showStats()">Show All Stats</button>
+            <div id="stats-result" class="result"></div>
+        </div>
+    </div>
+
+    <script src="storage.js"></script>
+    <script src="lichess-api.js"></script>
+    <script>
+        function log(elementId, message, type = 'info') {
+            const element = document.getElementById(elementId);
+            element.className = `result ${type}`;
+            element.textContent = message;
+        }
+
+        async function testMasterGames() {
+            log('master-result', '⏳ Fetching master games for starting position after 1.e4...', 'info');
+            try {
+                const fen = 'rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq e3 0 1';
+                const data = await lichessAPI.getMasterGames(fen);
+
+                if (lichessAPI.hasError(data)) {
+                    log('master-result', `❌ Error: ${lichessAPI.getErrorMessage(data.error)}`, 'error');
+                    return;
+                }
+
+                const summary = `✅ Success!\n\nTotal Games: ${data.white + data.draws + data.black}\n` +
+                    `White wins: ${data.white}\n` +
+                    `Draws: ${data.draws}\n` +
+                    `Black wins: ${data.black}\n\n` +
+                    `Top ${data.moves.length} moves:\n` +
+                    data.moves.slice(0, 5).map(m =>
+                        `  ${m.san}: W:${m.white} D:${m.draws} B:${m.black} (Avg Rating: ${m.averageRating || 'N/A'})`
+                    ).join('\n') +
+                    `\n\nTop Games: ${data.topGames ? data.topGames.length : 0} found`;
+
+                log('master-result', summary, 'success');
+            } catch (error) {
+                log('master-result', '❌ Error: ' + error.message, 'error');
+            }
+        }
+
+        async function testItalianOpening() {
+            log('master-result', '⏳ Fetching Italian Opening position (1.e4 e5 2.Nf3 Nc6 3.Bc4)...', 'info');
+            try {
+                const fen = 'r1bqkbnr/pppp1ppp/2n5/4p3/2B1P3/5N2/PPPP1PPP/RNBQK2R b KQkq - 3 3';
+                const data = await lichessAPI.getMasterGames(fen);
+
+                if (lichessAPI.hasError(data)) {
+                    log('master-result', `❌ Error: ${lichessAPI.getErrorMessage(data.error)}`, 'error');
+                    return;
+                }
+
+                const summary = `✅ Italian Opening Analysis!\n\n` +
+                    `Total Games: ${data.white + data.draws + data.black}\n` +
+                    `Continuation moves:\n` +
+                    data.moves.slice(0, 5).map(m =>
+                        `  ${m.san}: ${m.white + m.draws + m.black} games`
+                    ).join('\n');
+
+                log('master-result', summary, 'success');
+            } catch (error) {
+                log('master-result', '❌ Error: ' + error.message, 'error');
+            }
+        }
+
+        async function testLichessGames() {
+            log('lichess-result', '⏳ Fetching high-rated Lichess games for e4...', 'info');
+            try {
+                const fen = 'rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq e3 0 1';
+                const data = await lichessAPI.getLichessGames(fen);
+
+                if (lichessAPI.hasError(data)) {
+                    log('lichess-result', `❌ Error: ${lichessAPI.getErrorMessage(data.error)}`, 'error');
+                    return;
+                }
+
+                const summary = `✅ Lichess Games!\n\n` +
+                    `Total Games: ${data.white + data.draws + data.black}\n` +
+                    `Top moves:\n` +
+                    data.moves.slice(0, 5).map(m =>
+                        `  ${m.san}: ${m.white + m.draws + m.black} games (${m.averageRating || 'N/A'} avg)`
+                    ).join('\n') +
+                    `\n\nRecent Games: ${data.recentGames ? data.recentGames.length : 0}`;
+
+                log('lichess-result', summary, 'success');
+            } catch (error) {
+                log('lichess-result', '❌ Error: ' + error.message, 'error');
+            }
+        }
+
+        async function testDailyPuzzle() {
+            log('puzzle-result', '⏳ Fetching daily puzzle...', 'info');
+            try {
+                const data = await lichessAPI.getDailyPuzzle();
+
+                if (lichessAPI.hasError(data)) {
+                    log('puzzle-result', `❌ Error: ${lichessAPI.getErrorMessage(data.error)}`, 'error');
+                    return;
+                }
+
+                const summary = `✅ Daily Puzzle!\n\n` +
+                    `ID: ${data.puzzle.id}\n` +
+                    `Rating: ${data.puzzle.rating}\n` +
+                    `Plays: ${data.puzzle.plays}\n` +
+                    `Themes: ${data.puzzle.themes.join(', ')}\n` +
+                    `Solution: ${data.puzzle.solution.join(' ')}\n` +
+                    `Initial Move: ${data.puzzle.initialPly}`;
+
+                log('puzzle-result', summary, 'success');
+            } catch (error) {
+                log('puzzle-result', '❌ Error: ' + error.message, 'error');
+            }
+        }
+
+        async function testGameExport() {
+            log('game-result', '⏳ Fetching sample game...', 'info');
+            try {
+                // Using a known Lichess game ID
+                const gameId = 'q7ZvsdUF';
+                const pgn = await lichessAPI.getGame(gameId);
+
+                if (!pgn) {
+                    log('game-result', '❌ Failed to fetch game', 'error');
+                    return;
+                }
+
+                const preview = pgn.substring(0, 500) + (pgn.length > 500 ? '\n\n... (truncated)' : '');
+                log('game-result', `✅ Game PGN:\n\n${preview}`, 'success');
+            } catch (error) {
+                log('game-result', '❌ Error: ' + error.message, 'error');
+            }
+        }
+
+        async function testCache() {
+            log('cache-result', '⏳ Testing cache...', 'info');
+            try {
+                // Set test data
+                storage.cache.set('test_key', { test: 'data', timestamp: Date.now() }, 5000);
+
+                // Get immediately
+                const retrieved = storage.cache.get('test_key');
+
+                if (retrieved && retrieved.test === 'data') {
+                    log('cache-result', '✅ Cache set/get working!\n\n' + JSON.stringify(retrieved, null, 2), 'success');
+                } else {
+                    log('cache-result', '❌ Cache test failed', 'error');
+                }
+            } catch (error) {
+                log('cache-result', '❌ Error: ' + error.message, 'error');
+            }
+        }
+
+        function showCacheInfo() {
+            const info = storage.cache.getInfo();
+            log('cache-result',
+                `📊 Cache Info:\n\n` +
+                `Entries: ${info.count}\n` +
+                `Size: ${info.sizeKB} KB`,
+                'info'
+            );
+        }
+
+        function clearCache() {
+            storage.cache.clear();
+            log('cache-result', '🗑️ Cache cleared!', 'success');
+        }
+
+        async function testStats() {
+            log('stats-result', '⏳ Testing puzzle statistics...', 'info');
+            try {
+                // Save some test puzzle solves
+                storage.stats.savePuzzleSolve('puzzle1', true, 25000);
+                storage.stats.savePuzzleSolve('puzzle2', false, 45000);
+                storage.stats.savePuzzleSolve('puzzle3', true, 18000);
+
+                const summary = storage.stats.getPuzzleSummary();
+
+                log('stats-result',
+                    `✅ Puzzle Statistics:\n\n` +
+                    `Total Attempted: ${summary.total}\n` +
+                    `Solved: ${summary.solved}\n` +
+                    `Failed: ${summary.failed}\n` +
+                    `Solve Rate: ${summary.solveRate}%\n` +
+                    `Average Time: ${summary.avgTime}s`,
+                    'success'
+                );
+            } catch (error) {
+                log('stats-result', '❌ Error: ' + error.message, 'error');
+            }
+        }
+
+        function showStats() {
+            const puzzleStats = storage.stats.getPuzzleSummary();
+            const tutorialProgress = storage.stats.getTutorialProgress();
+
+            log('stats-result',
+                `📊 All Statistics:\n\n` +
+                `=== Puzzles ===\n` +
+                `Attempted: ${puzzleStats.total}\n` +
+                `Solve Rate: ${puzzleStats.solveRate}%\n\n` +
+                `=== Tutorials ===\n` +
+                `Completed: ${Object.keys(tutorialProgress).length}\n` +
+                Object.keys(tutorialProgress).map(key =>
+                    `  - ${key}: ${tutorialProgress[key].completed ? '✅' : '❌'}`
+                ).join('\n'),
+                'info'
+            );
+        }
+
+        // Auto-run test on load to verify API is working
+        window.addEventListener('load', () => {
+            console.log('🚀 Lichess API Client loaded successfully!');
+            console.log('Click buttons above to test different API endpoints');
+        });
+    </script>
+</body>
+
+</html>
